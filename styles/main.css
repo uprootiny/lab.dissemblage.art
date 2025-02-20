@@ -1,0 +1,26 @@
+body {
+  font-family: Menlo, monospace;
+  background: #101010;
+  color: #e0e0e0;
+  text-align: center;
+}
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+.tool {
+  padding: 10px;
+  border: 1px solid #444;
+  background: #181818;
+  width: 320px;
+  height: 360px;
+}
+canvas {
+  display: block;
+  margin: auto;
+  border: 1px solid #555;
+  width: 300px;
+  height: 300px;
+}

@@ -1,0 +1,11 @@
+# Ignore system and temporary files
+*.log
+*.tmp
+.DS_Store
+
+# Ignore Nginx logs
+/var/log/nginx/*
+
+# Ignore compiled files
+node_modules/
+venv/
