@@ -1,37 +1,215 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
- "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Dissemblage - Computational Art Playground</title>
-  <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
-  <link rel="stylesheet" href="styles/main.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uprootiny's Projects</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babel-standalone@6.26.0/babel.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Dissemblage</h1>
-    <p>Exploring emergent structures through computation.</p>
-  </header>
+    <div id="root"></div>
 
-  <section class="container">
-    <div class="tool">
-      <h2>Chaotic Fields</h2>
-      <canvas id="fields"></canvas>
-    </div>
-    <div class="tool">
-      <h2>Voronoi Growth</h2>
-      <canvas id="voronoi"></canvas>
-    </div>
-    <div class="tool">
-      <h2>Wave Interference</h2>
-      <canvas id="waves"></canvas>
-    </div>
-  </section>
+    <script type="text/babel">
+        const calculateProjectScore = (repo) => {
+            let score = 50; // Base score
 
-  <footer>
-    <p>Dissemblage Lab - Iterating Computational Aesthetics</p>
-  </footer>
+            // Scoring criteria
+            score += repo.stargazers_count > 10 ? 15 : Math.floor(repo.stargazers_count * 1.5);
+            score += repo.forks_count > 5 ? 10 : Math.floor(repo.forks_count * 2);
+            score += repo.language ? 10 : 0;
+            score += repo.homepage ? 10 : 0;
+            score += repo.description ? 5 : 0;
 
-  <script type="text/javascript" src="js/main.js"></script>
+            // Penalty for old repositories
+            const lastUpdated = new Date(repo.updated_at);
+            const monthsSinceUpdate = (new Date() - lastUpdated) / (1000 * 60 * 60 * 24 * 30);
+            score -= monthsSinceUpdate > 12 ? 10 : 0;
+
+            return Math.min(Math.max(score, 0), 100);
+        };
+
+        const determineProjectStatus = (score) => {
+            if (score >= 90) return { status: 'Excellent', color: 'var(--glow-green)' };
+            if (score >= 75) return { status: 'Good', color: 'var(--glow-blue)' };
+            if (score >= 50) return { status: 'Developing', color: 'var(--glow-amber)' };
+            return { status: 'Needs Attention', color: 'var(--glow-rose)' };
+        };
+
+        const extractTechStack = (repo) => {
+            const stackDetectors = {
+                'JavaScript': ['js', 'react', 'node', 'express', 'vue', 'angular'],
+                'Python': ['python', 'django', 'flask', 'fastapi', 'pandas', 'numpy'],
+                'TypeScript': ['ts', 'typescript', 'next', 'nest'],
+                'Rust': ['rust', 'cargo', 'tokio'],
+                'Go': ['go', 'golang', 'grpc'],
+                'Machine Learning': ['ml', 'ai', 'tensorflow', 'pytorch', 'keras']
+            };
+
+            const detectedTech = Object.entries(stackDetectors)
+                .filter(([_, tags]) => 
+                    tags.some(tag => 
+                        (repo.name.toLowerCase().includes(tag) || 
+                        (repo.description && repo.description.toLowerCase().includes(tag)))
+                    )
+                )
+                .map(([tech]) => tech);
+
+            // Fallback to language if no tech detected
+            return detectedTech.length > 0 ? detectedTech : [repo.language].filter(Boolean);
+        };
+
+        const GitHubDashboard = () => {
+            const [repositories, setRepositories] = React.useState([]);
+            const [isLoading, setIsLoading] = React.useState(true);
+            const [error, setError] = React.useState(null);
+
+            React.useEffect(() => {
+                const fetchRepositories = async () => {
+                    try {
+                        const response = await fetch('https://api.github.com/users/uprootiny/repos?sort=updated');
+                        const data = await response.json();
+                        setRepositories(data);
+                        setIsLoading(false);
+                    } catch (err) {
+                        setError(err.message);
+                        setIsLoading(false);
+                    }
+                };
+
+                fetchRepositories();
+            }, []);
+
+            if (isLoading) {
+                return (
+                    <div className="container">
+                        <div className="project-card">
+                            <div className="project-header">
+                                <h2>Loading Projects...</h2>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (error) {
+                return (
+                    <div className="container">
+                        <div className="project-card">
+                            <div className="project-header" style={{backgroundColor: 'var(--glow-rose)'}}>
+                                <h2>Error Loading Projects</h2>
+                            </div>
+                            <div className="project-content">
+                                <p>{error}</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <header>
+                        <div className="header-logo">
+                            <div className="logo-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(64, 128, 255, 0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                            </div>
+                            <span className="logo-text">uprootiny's Projects</span>
+                        </div>
+                    </header>
+
+                    <div className="project-grid">
+                        {repositories.map(repo => {
+                            const score = calculateProjectScore(repo);
+                            const { status, color } = determineProjectStatus(score);
+                            const techStack = extractTechStack(repo);
+
+                            return (
+                                <div 
+                                    key={repo.id} 
+                                    className="project-card" 
+                                    style={{
+                                        '--project-glow': color
+                                    }}
+                                >
+                                    <div className="project-header">
+                                        <h2 className="project-name">{repo.name}</h2>
+                                        <span 
+                                            className="project-score" 
+                                            title={`Project Health: ${status}`}
+                                        >
+                                            {score}%
+                                        </span>
+                                    </div>
+
+                                    <div className="project-content">
+                                        <p className="project-description">
+                                            {repo.description || 'No description available'}
+                                        </p>
+
+                                        <div className="tech-stack">
+                                            {techStack.map(tech => (
+                                                <span key={tech} className="tech-tag">{tech}</span>
+                                            ))}
+                                        </div>
+
+                                        <div className="metrics-grid">
+                                            <div className="metric-item">
+                                                <div className="metric-label">Stars</div>
+                                                <div className="metric-value">
+                                                    {repo.stargazers_count}
+                                                </div>
+                                            </div>
+                                            <div className="metric-item">
+                                                <div className="metric-label">Forks</div>
+                                                <div className="metric-value">
+                                                    {repo.forks_count}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="project-footer">
+                                        <div className="project-links">
+                                            {repo.homepage && (
+                                                <a 
+                                                    href={repo.homepage} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="nav-link"
+                                                >
+                                                    Live Site
+                                                </a>
+                                            )}
+                                            <a 
+                                                href={repo.html_url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="nav-link"
+                                            >
+                                                GitHub
+                                            </a>
+                                        </div>
+                                        <div className="status-text">
+                                            Updated: {new Date(repo.updated_at).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<GitHubDashboard />, document.getElementById('root'));
+    </script>
 </body>
 </html>
